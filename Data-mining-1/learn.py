@@ -9,7 +9,7 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from sklearn import tree
 
-OutputPath = "result2.csv"
+OutputPath = "result.csv"
 
 class CNN():
 	global OutputPath
