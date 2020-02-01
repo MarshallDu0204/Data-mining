@@ -9,13 +9,14 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from sklearn import tree
 
-OutputPath = "result.csv"
-
+#code of Convolution Neural Network
 class CNN():
-	global OutputPath
 
-	imgWidth = 28
+	imgWidth = 28#the size of each image
 	imgHeight = 28
+
+	num_epochs = 5
+	batch_size =16
 
 	def __init__(self,imgWidth = 28,imgHeight = 28):
 		self.imgWidth = imgWidth
@@ -25,39 +26,39 @@ class CNN():
 
 		# add more preprocessing steps here
 
-		data = data/255
+		data = data/255#scale the pixel grey scale value to 0-1
 
-		data = data.reshape(len(data),self.imgWidth,self.imgHeight,1)
+		data = data.reshape(len(data),self.imgWidth,self.imgHeight,1)# reshape the 784 pixel to 28*28
 
-		label = keras.utils.to_categorical(label,num_classes = 10)
+		label = keras.utils.to_categorical(label,num_classes = 10)#one hot label of the data from 0-9
 
 		return data,label
 
 	def CNNmodel(self,pretrained_weights = None,input_shape = (imgHeight,imgWidth,1)):
 		
-		model = Sequential()
+		model = Sequential()#init the model
 
 		model.add(Conv2D(32,(3,3),activation = 'relu',input_shape = input_shape))
-		model.add(Conv2D(32,(3,3),activation = 'relu'))
+		model.add(Conv2D(32,(3,3),activation = 'relu'))#first convolution layer
 
-		model.add(MaxPooling2D(pool_size = (2,2)))
+		model.add(MaxPooling2D(pool_size = (2,2)))#max pooling layer
+
+		model.add(Dropout(0.25))#give up 25% of weight value
+
+		model.add(Conv2D(64,(3,3),activation = 'relu'))#convolution layer
+		model.add(Conv2D(64,(3,3),activation = 'relu'))
+
+		model.add(MaxPooling2D(pool_size = (2,2)))#max pooling layer
 
 		model.add(Dropout(0.25))
 
-		model.add(Conv2D(64,(3,3),activation = 'relu'))
-		model.add(Conv2D(64,(3,3),activation = 'relu'))
+		model.add(Flatten())#flat the data to the fully connect layer
 
-		model.add(MaxPooling2D(pool_size = (2,2)))
+		model.add(Dense(512,activation = 'relu'))# fully connect layer
 
-		model.add(Dropout(0.25))
+		model.add(Dropout(0.5))#random giveup 50 precent of weight to prevent overfitting
 
-		model.add(Flatten())
-
-		model.add(Dense(256,activation = 'relu'))
-
-		model.add(Dropout(0.5))
-
-		model.add(Dense(10,activation = 'softmax'))
+		model.add(Dense(10,activation = 'softmax'))#the softmax layer
 
 		model.compile(optimizer = Adam(lr = 1e-3),loss = 'categorical_crossentropy',metrics = ['accuracy'])
 
@@ -65,32 +66,32 @@ class CNN():
 
 	def trainCNN(self,model,data,label):
 
-		model_checkpoint = ModelCheckpoint('CNN.hdf5',monitor = 'loss',verbose = 1,save_best_only = True)
+		model_checkpoint = ModelCheckpoint('CNN.hdf5',monitor = 'loss',verbose = 1,save_best_only = True)#store the model in each epoch
 
-		model.fit(data,label,epochs = 5,batch_size = 16,callbacks = [model_checkpoint])
+		model.fit(data,label,epochs = self.num_epochs,batch_size = self.batch_size,callbacks = [model_checkpoint])#training the data
 
 		return model
 
 
-	def predictResult(self,model,path = ""):
+	def predictResult(self,model,testDataPath = "testing.csv",outputPath = "result.csv"):
 
-		testingData = np.loadtxt("testing.csv",delimiter = ",",skiprows = 1)
+		testingData = np.loadtxt(testDataPath,delimiter = ",",skiprows = 1)#load the testing data
 
 		data = testingData/255
 
 		data = data.reshape(len(data),self.imgWidth,self.imgHeight,1)
 
-		result = model.predict(data,batch_size = 16)
+		result = model.predict(data,batch_size = self.batch_size)#predict the result
 
 		i = 0
 
 		resultList = []
 
 		while i!=len(result):
-			resultList.append(np.argmax(result[i]))
+			resultList.append(np.argmax(result[i]))#argmax to extract the max possibility of given 10 result of softmax layer
 			i+=1
 
-		with open(OutputPath,"w",newline = "") as file:
+		with open(outputPath,"w",newline = "") as file:#write the result to file
 			writer = csv.writer(file)
 			writer.writerow(["TestLabel"])
 			for result in resultList:
@@ -98,7 +99,7 @@ class CNN():
 			
 			file.close()
 
-	def dataToImg(self,index):
+	def dataToImg(self,index):#convert a given line of trainig data to image
 		data = np.loadtxt("testing.csv",delimiter = ",",skiprows = 1)
 		img = data[index]
 		img = img.reshape(28,28,1)
@@ -117,7 +118,6 @@ class CNN():
 		img.show()
 
 class decisionTree():
-	global OutputPath
 
 	def preprocessing(self,data,label):
 		#add preprocessing steps here
@@ -128,12 +128,12 @@ class decisionTree():
 		classTree = classTree.fit(data,label)
 		return classTree 
 
-	def predict(self,classTree,path = ""):
-		testingData = np.loadtxt("testing.csv",delimiter = ",",skiprows = 1)
+	def predict(self,classTree,testDataPath = "testing.csv",outputPath = "result1.csv"):
+		testingData = np.loadtxt(testDataPath,delimiter = ",",skiprows = 1)
 
 		resultList = classTree.predict(testingData)
 
-		with open(OutputPath,"w",newline = "") as file:
+		with open(outputPath,"w",newline = "") as file:
 			writer = csv.writer(file)
 			writer.writerow(["TestLabel"])
 			for result in resultList:
@@ -141,15 +141,40 @@ class decisionTree():
 			
 			file.close()
 
-def readTrainingData(path = ""):
-	trainingData = np.loadtxt("training.csv",delimiter = ",",skiprows = 1)
+# code of the example classifycation method
+class dmExample():
 
-	label = trainingData[:,0]
+	def preprocessing(self,data,label):
+		
+		return data,label
+
+	def training(self,data,label):
+		
+		return model
+
+	def predict(self,model,testDataPath = "testing.csv",outputPath = ""):
+		testingData = np.loadtxt(testDataPath,delimiter = ",",skiprows = 1)
+
+		#result = model.predict(testingData)
+
+		with open(outputPath,"w",newline = "") as file:
+			writer = csv.writer(file)
+			writer.writerow(["TestLabel"])
+			for result in resultList:
+				writer.writerow([result])
+			
+			file.close()
+
+
+def readTrainingData(path = "training.csv"):
+	trainingData = np.loadtxt(path,delimiter = ",",skiprows = 1)#skip the first row of string
+
+	label = trainingData[:,0]#split the label and training data
 	data = trainingData[:,1:785]
 
 	return data,label
 
-def calculateScore(path1,path2):
+def calculateScore(path1 = "result.csv",path2 = "result1.csv"):#compare the similarity of any two result 
 	result1 = np.loadtxt(path1,delimiter = ",",skiprows = 1)
 	result2 = np.loadtxt(path2,delimiter = ",",skiprows = 1)
 	i = 0
@@ -175,12 +200,14 @@ def execDecisionTree(data,label):
 	model = tree.training(data,label)
 	tree.predict(model)
 
-def execBayes(data,label):
-	bayesClassifier = naiveBayes()
-	model = bayesClassifier.training(data,label)
-	bayesClassifier.predict(model)
+#code of execute the example class
+def execDmExample():
+	model = dmExample()
+	#model = model.training(data,label)
+	#model.predict()
+	
 
 data,label = readTrainingData()
 #execCNN(data,label)
 #execDecisionTree(data,label)
-calculateScore("result.csv","result2.csv")
+#calculateScore("result.csv","result1.csv")
