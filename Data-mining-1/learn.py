@@ -15,7 +15,7 @@ class CNN():
 	imgWidth = 28#the size of each image
 	imgHeight = 28
 
-	num_epochs = 5
+	num_epochs = 7
 	batch_size =16
 
 	def __init__(self,imgWidth = 28,imgHeight = 28):
@@ -208,6 +208,6 @@ def execDmExample():
 	
 
 data,label = readTrainingData()
-#execCNN(data,label)
+execCNN(data,label)
 #execDecisionTree(data,label)
 #calculateScore("result.csv","result1.csv")
